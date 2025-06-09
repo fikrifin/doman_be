@@ -1,4 +1,4 @@
 from .kategoriview import KategoriViewSet
 from .transaksiview import TransaksiViewSet
-from .transaksiwajibview import TransaksiWajibViewSet
-from .statuspembayaranwajibview import ChecklistWajibViewSet
+from .tagihanview import TagihanViewSet
+from .statustagihanview import ChecklistWajibViewSet

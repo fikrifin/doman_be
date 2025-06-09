@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
-from transaksi.models import (TransaksiWajib, StatusPembayaranWajib, Transaksi)
-from transaksi.serializers.transaksiwajibserializers import TransaksiWajibSerializer
+from transaksi.models import (Tagihan, StatusTagihan, Transaksi)
+from transaksi.serializers.tagihanserializers import TagihanSerializer
 
 class ChecklistWajibViewSet(viewsets.ViewSet):
     """
@@ -23,16 +23,16 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         bulan, tahun = today.month, today.year
         
         # Ambil semua template transaksi wajib yang aktif
-        queryset = TransaksiWajib.objects.filter(user=request.user, aktif=True)
+        queryset = Tagihan.objects.filter(user=request.user, aktif=True)
         
         response_data = []
         for tw in queryset:
             # Cek status pembayarannya untuk bulan ini
-            status_obj = StatusPembayaranWajib.objects.filter(
+            status_obj = StatusTagihan.objects.filter(
                 transaksi_wajib=tw, bulan=bulan, tahun=tahun
             ).first()
             
-            data = TransaksiWajibSerializer(tw).data
+            data = TagihanSerializer(tw).data
             data['status_lunas'] = status_obj.status_lunas if status_obj else False
             response_data.append(data)
             
@@ -46,12 +46,12 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         Secara otomatis akan membuat record Transaksi baru.
         URL: POST /api/checklist/{id}/bayar/
         """
-        transaksi_wajib = TransaksiWajib.objects.get(pk=pk, user=request.user)
+        transaksi_wajib = Tagihan.objects.get(pk=pk, user=request.user)
         
         today = datetime.date.today()
         bulan, tahun = today.month, today.year
 
-        status_pembayaran, created = StatusPembayaranWajib.objects.get_or_create(
+        status_pembayaran, created = StatusTagihan.objects.get_or_create(
             transaksi_wajib=transaksi_wajib, bulan=bulan, tahun=tahun
         )
 

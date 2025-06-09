@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from transaksi.models.transaksiwajib import TransaksiWajib
+from transaksi.models.tagihan import Tagihan
 
-class TransaksiWajibSerializer(serializers.ModelSerializer):
+class TagihanSerializer(serializers.ModelSerializer):
     kategori_nama = serializers.CharField(source='kategori.nama', read_only=True)
     
     class Meta:
-        model = TransaksiWajib
+        model = Tagihan
         fields = [
             'id', 'kategori', 'kategori_nama', 'deskripsi', 
             'jumlah_estimasi', 'hari_jatuh_tempo', 'aktif'
