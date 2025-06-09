@@ -21,7 +21,7 @@ from users.urls import urlpatterns as users_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/transaksi/', include(transaksi_urls)),
+    path('api/doman/', include(transaksi_urls)),
     path('api/user/', include('users.urls')),  # Enable users URLs
     path('api/auth/', include('dj_rest_auth.urls')),
     # Remove default registration URL
