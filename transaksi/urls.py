@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from transaksi.views import (
+    RekeningViewSet,
     KategoriViewSet,
     TransaksiViewSet,
     TagihanViewSet,
@@ -9,6 +10,7 @@ from transaksi.views import (
 
 # Buat router dan daftarkan viewsets kita
 router = DefaultRouter()
+router.register(r'rekening', RekeningViewSet, basename='rekening')
 router.register(r'kategori', KategoriViewSet, basename='kategori')
 router.register(r'transaksi', TransaksiViewSet, basename='transaksi')
 router.register(r'tagihan', TagihanViewSet, basename='tagihan')

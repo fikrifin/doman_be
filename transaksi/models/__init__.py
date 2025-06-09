@@ -1,3 +1,4 @@
+from .rekening import Rekening
 from .kategori import Kategori
 from .transaksi import Transaksi
 from .tagihan import Tagihan

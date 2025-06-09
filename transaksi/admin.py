@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Kategori, Transaksi, Tagihan, StatusTagihan
+from .models import Rekening, Kategori, Transaksi, Tagihan, StatusTagihan
 
 # Register your models here.
+admin.site.register(Rekening)
 admin.site.register(Kategori)
 admin.site.register(Transaksi)
 admin.site.register(Tagihan)

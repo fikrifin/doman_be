@@ -3,6 +3,7 @@ from transaksi.models.transaksi import Transaksi
 
 class TransaksiSerializer(serializers.ModelSerializer):
     # Tampilkan nama kategori, bukan hanya ID-nya
+    rekening_info = serializers.CharField(source='rekening.__str__', read_only=True)
     kategori_nama = serializers.CharField(source='kategori.nama', read_only=True)
 
     class Meta:

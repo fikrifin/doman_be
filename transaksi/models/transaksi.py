@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from .rekening import Rekening
 from .kategori import Kategori
 
 class Transaksi(models.Model):
@@ -8,6 +9,7 @@ class Transaksi(models.Model):
         PENGELUARAN = 'OUT', 'Pengeluaran'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaksi')
+    rekening = models.ForeignKey(Rekening, on_delete=models.PROTECT, related_name='transaksi')
     kategori = models.ForeignKey(Kategori, on_delete=models.SET_NULL, null=True, blank=True)
     deskripsi = models.CharField(max_length=255)
     jumlah = models.DecimalField(max_digits=12, decimal_places=2, help_text="Jumlah transaksi dalam Rupiah")

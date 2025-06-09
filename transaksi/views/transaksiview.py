@@ -6,6 +6,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import serializers
+from transaksi.models.rekening import Rekening
 from transaksi.models.transaksi import Transaksi
 from transaksi.serializers.transaksiserializers import TransaksiSerializer
 
@@ -35,7 +37,72 @@ class TransaksiViewSet(viewsets.ModelViewSet):
         return queryset.order_by('tanggal', '-dibuat_pada')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        rekening = serializer.validated_data['rekening']
+        jumlah = serializer.validated_data['jumlah']
+        jenis = serializer.validated_data['jenis']
+
+        # Pastikan rekening ini milik user yang sedang login
+        if rekening.user != self.request.user:
+            raise serializers.ValidationError("Anda tidak memiliki akses ke rekening ini.")
+
+        with transaction.atomic():
+            # Kunci row rekening untuk mencegah race condition
+            rekening_locked = Rekening.objects.select_for_update().get(pk=rekening.pk)
+            
+            if jenis == Transaksi.Jenis.PEMASUKAN:
+                rekening_locked.saldo += jumlah
+            else: # Pengeluaran
+                rekening_locked.saldo -= jumlah
+            
+            rekening_locked.save()
+            serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        rekening_lama = instance.rekening
+        jumlah_lama = instance.jumlah
+        jenis_lama = instance.jenis
+
+        rekening_baru = serializer.validated_data.get('rekening', rekening_lama)
+        jumlah_baru = serializer.validated_data.get('jumlah', jumlah_lama)
+        jenis_baru = serializer.validated_data.get('jenis', jenis_lama)
+
+        if rekening_baru.user != self.request.user:
+            raise serializers.ValidationError("Anda tidak memiliki akses ke rekening ini.")
+
+        with transaction.atomic():
+            # 1. Kembalikan saldo dari transaksi lama
+            rekening_lama_locked = Rekening.objects.select_for_update().get(pk=rekening_lama.pk)
+            if jenis_lama == Transaksi.Jenis.PEMASUKAN:
+                rekening_lama_locked.saldo -= jumlah_lama
+            else:
+                rekening_lama_locked.saldo += jumlah_lama
+            rekening_lama_locked.save()
+            
+            # 2. Terapkan saldo dari transaksi baru
+            rekening_baru_locked = Rekening.objects.select_for_update().get(pk=rekening_baru.pk)
+            if jenis_baru == Transaksi.Jenis.PEMASUKAN:
+                rekening_baru_locked.saldo += jumlah_baru
+            else:
+                rekening_baru_locked.saldo -= jumlah_baru
+            rekening_baru_locked.save()
+            
+            serializer.save()
+
+    def perform_destroy(self, instance):
+        rekening = instance.rekening
+        jumlah = instance.jumlah
+        jenis = instance.jenis
+
+        with transaction.atomic():
+            rekening_locked = Rekening.objects.select_for_update().get(pk=rekening.pk)
+            # Kembalikan saldo sebelum transaksi dihapus
+            if jenis == Transaksi.Jenis.PEMASUKAN:
+                rekening_locked.saldo -= jumlah
+            else:
+                rekening_locked.saldo += jumlah
+            rekening_locked.save()
+            instance.delete()
 
     # --- IMPLEMENTASI BARU DI SINI ---
     @action(detail=False, methods=['get'], url_path='overview')

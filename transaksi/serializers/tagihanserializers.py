@@ -8,6 +8,6 @@ class TagihanSerializer(serializers.ModelSerializer):
         model = Tagihan
         fields = [
             'id', 'kategori', 'kategori_nama', 'deskripsi', 
-            'jumlah_estimasi', 'hari_jatuh_tempo', 'aktif'
+            'jumlah_tagihan', 'hari_jatuh_tempo', 'aktif'
         ]
         extra_kwargs = {'kategori': {'write_only': True}}
