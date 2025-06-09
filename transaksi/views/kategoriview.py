@@ -16,7 +16,7 @@ class KategoriViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Hanya tampilkan kategori milik user yang sedang login
-        return Kategori.objects.filter(user=self.request.user)
+        return Kategori.objects.filter(user=self.request.user).order_by('id')
 
     def perform_create(self, serializer):
         # Saat kategori baru dibuat, otomatis set user-nya
