@@ -9,8 +9,11 @@ class TransaksiSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaksi
         fields = [
-            'id', 'kategori', 'kategori_nama', 'deskripsi', 
-            'jumlah', 'jenis', 'tanggal', 'dibuat_pada'
+            'id', 'rekening', 'rekening_info', 'kategori', 'kategori_nama', 
+            'deskripsi', 'jumlah', 'jenis', 'tanggal'
         ]
         # kategori adalah write-only, karena kita akan menampilkannya sebagai kategori_nama
-        extra_kwargs = {'kategori': {'write_only': True}}
+        extra_kwargs = {
+            'rekening': {'write_only': True},
+            'kategori': {'write_only': True}
+        }

@@ -2,12 +2,27 @@ from rest_framework import serializers
 from transaksi.models.tagihan import Tagihan
 
 class TagihanSerializer(serializers.ModelSerializer):
-    kategori_nama = serializers.CharField(source='kategori.nama', read_only=True)
+    # Field read-only untuk menampilkan nama rekening yang mudah dibaca
+    rekening_info = serializers.CharField(source='rekening.__str__', read_only=True)
     
+    # Field read-only untuk menampilkan nama kategori
+    kategori_nama = serializers.CharField(source='kategori.nama', read_only=True)
+
     class Meta:
         model = Tagihan
         fields = [
-            'id', 'kategori', 'kategori_nama', 'deskripsi', 
-            'jumlah_tagihan', 'hari_jatuh_tempo', 'aktif'
+            'id',
+            'deskripsi',
+            'jumlah_tagihan',
+            'hari_jatuh_tempo',
+            'aktif',
+            'rekening', 
+            'rekening_info',
+            'kategori', 
+            'kategori_nama',
         ]
-        extra_kwargs = {'kategori': {'write_only': True}}
+        # Definisikan field mana yang hanya untuk input
+        extra_kwargs = {
+            'rekening': {'write_only': True},
+            'kategori': {'write_only': True},
+        }
