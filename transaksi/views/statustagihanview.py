@@ -29,7 +29,7 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         for tw in queryset:
             # Cek status pembayarannya untuk bulan ini
             status_obj = StatusTagihan.objects.filter(
-                transaksi_wajib=tw, bulan=bulan, tahun=tahun
+                tagihan=tw, bulan=bulan, tahun=tahun
             ).first()
             
             data = TagihanSerializer(tw).data
@@ -46,13 +46,13 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         Secara otomatis akan membuat record Transaksi baru.
         URL: POST /api/checklist/{id}/bayar/
         """
-        transaksi_wajib = Tagihan.objects.get(pk=pk, user=request.user)
+        tagihan = Tagihan.objects.get(pk=pk, user=request.user)
         
         today = datetime.date.today()
         bulan, tahun = today.month, today.year
 
         status_pembayaran, created = StatusTagihan.objects.get_or_create(
-            transaksi_wajib=transaksi_wajib, bulan=bulan, tahun=tahun
+            tagihan=tagihan, bulan=bulan, tahun=tahun
         )
 
         if status_pembayaran.status_lunas:
@@ -64,11 +64,12 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         # Buat transaksi pengeluaran baru
         transaksi_baru = Transaksi.objects.create(
             user=request.user,
-            kategori=transaksi_wajib.kategori,
-            deskripsi=transaksi_wajib.deskripsi,
-            jumlah=transaksi_wajib.jumlah_estimasi,
+            kategori=tagihan.kategori,
+            deskripsi=tagihan.deskripsi,
+            jumlah=tagihan.jumlah_tagihan,
             jenis=Transaksi.Jenis.PENGELUARAN,
-            tanggal=today
+            tanggal=today,
+            rekening=tagihan.rekening
         )
 
         # Update status
@@ -77,6 +78,6 @@ class ChecklistWajibViewSet(viewsets.ViewSet):
         status_pembayaran.save()
 
         return Response(
-            {'status': 'success', 'message': f"'{transaksi_wajib.deskripsi}' telah ditandai lunas."},
+            {'status': 'success', 'message': f"'{tagihan.deskripsi}' telah ditandai lunas."},
             status=status.HTTP_200_OK
         )
