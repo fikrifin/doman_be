@@ -23,7 +23,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Transaksi.objects.filter(user=user)
 
-        # Ambil parameter query untuk filtering
         bulan = self.request.query_params.get('bulan')
         tahun = self.request.query_params.get('tahun')
 
@@ -31,7 +30,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             try:
                 queryset = queryset.filter(tanggal__month=int(bulan), tanggal__year=int(tahun))
             except (ValueError, TypeError):
-                # Abaikan jika parameter tidak valid
                 pass
         
         return queryset.order_by('tanggal', '-dibuat_pada')
@@ -41,17 +39,15 @@ class TransaksiViewSet(viewsets.ModelViewSet):
         jumlah = serializer.validated_data['jumlah']
         jenis = serializer.validated_data['jenis']
 
-        # Pastikan rekening ini milik user yang sedang login
         if rekening.user != self.request.user:
             raise serializers.ValidationError("Anda tidak memiliki akses ke rekening ini.")
 
         with transaction.atomic():
-            # Kunci row rekening untuk mencegah race condition
             rekening_locked = Rekening.objects.select_for_update().get(pk=rekening.pk)
             
             if jenis == Transaksi.Jenis.PEMASUKAN:
                 rekening_locked.saldo += jumlah
-            else: # Pengeluaran
+            else:
                 rekening_locked.saldo -= jumlah
             
             rekening_locked.save()
@@ -71,7 +67,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError("Anda tidak memiliki akses ke rekening ini.")
 
         with transaction.atomic():
-            # 1. Kembalikan saldo dari transaksi lama
             rekening_lama_locked = Rekening.objects.select_for_update().get(pk=rekening_lama.pk)
             if jenis_lama == Transaksi.Jenis.PEMASUKAN:
                 rekening_lama_locked.saldo -= jumlah_lama
@@ -79,7 +74,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
                 rekening_lama_locked.saldo += jumlah_lama
             rekening_lama_locked.save()
             
-            # 2. Terapkan saldo dari transaksi baru
             rekening_baru_locked = Rekening.objects.select_for_update().get(pk=rekening_baru.pk)
             if jenis_baru == Transaksi.Jenis.PEMASUKAN:
                 rekening_baru_locked.saldo += jumlah_baru
@@ -96,7 +90,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             rekening_locked = Rekening.objects.select_for_update().get(pk=rekening.pk)
-            # Kembalikan saldo sebelum transaksi dihapus
             if jenis == Transaksi.Jenis.PEMASUKAN:
                 rekening_locked.saldo -= jumlah
             else:
@@ -104,7 +97,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             rekening_locked.save()
             instance.delete()
 
-    # --- IMPLEMENTASI BARU DI SINI ---
     @action(detail=False, methods=['get'], url_path='overview')
     def overview(self, request):
         """
@@ -114,7 +106,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
         user = self.request.user
         today = datetime.date.today()
         
-        # --- 1. Kalkulasi Ringkasan Bulan Ini ---
         transaksi_bulan_ini = self.get_queryset().filter(
             tanggal__year=today.year,
             tanggal__month=today.month
@@ -126,7 +117,6 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('jumlah'), 0, output_field=DecimalField())
         )['total']
         
-        # --- 2. Kalkulasi Ringkasan Keseluruhan ---
         semua_transaksi = self.get_queryset()
         pemasukan_total = semua_transaksi.filter(jenis=Transaksi.Jenis.PEMASUKAN).aggregate(
             total=Coalesce(Sum('jumlah'), 0, output_field=DecimalField())
@@ -135,11 +125,9 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('jumlah'), 0, output_field=DecimalField())
         )['total']
 
-        # --- 3. Ambil 10 Riwayat Transaksi Terakhir Bulan Ini ---
         riwayat_terakhir = transaksi_bulan_ini.order_by('-tanggal', '-dibuat_pada')[:10]
         riwayat_serializer = self.get_serializer(riwayat_terakhir, many=True)
 
-        # --- 4. Susun Data Respons ---
         data = {
             'ringkasan_bulan_ini': {
                 'total_pemasukan': pemasukan_bulan_ini,

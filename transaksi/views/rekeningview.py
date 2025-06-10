@@ -11,9 +11,7 @@ class RekeningViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Hanya tampilkan rekening milik user yang sedang login
         return Rekening.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Saat rekening baru dibuat, otomatis set user-nya
         serializer.save(user=self.request.user)

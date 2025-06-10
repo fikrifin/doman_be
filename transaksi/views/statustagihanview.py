@@ -5,13 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-# Impor semua model yang diperlukan
 from transaksi.models.tagihan import Tagihan
 from transaksi.models.statustagihan import StatusTagihan
 from transaksi.models.rekening import Rekening
 from transaksi.models.transaksi import Transaksi
 
-# Impor serializer yang relevan
 from transaksi.serializers.tagihanserializers import TagihanSerializer
 
 class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
@@ -41,16 +39,13 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
 
         response_data = []
         for tagihan in queryset:
-            # Cari atau buat status untuk bulan ini agar selalu ada di checklist
             status_obj, created = StatusTagihan.objects.get_or_create(
                 tagihan=tagihan,
                 bulan=bulan,
                 tahun=tahun
             )
             
-            # Gunakan serializer untuk mendapatkan data dasar dari template Tagihan
             data = self.get_serializer(tagihan).data
-            # Tambahkan informasi 'status_lunas' dari objek StatusTagihan
             data['status_lunas'] = status_obj.status_lunas
             response_data.append(data)
             
@@ -64,7 +59,7 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
         Secara otomatis akan membuat record Transaksi dan mengurangi saldo Rekening.
         URL: POST /api/status-tagihan/{id}/bayar/
         """
-        tagihan = self.get_object() # Mengambil instance Tagihan berdasarkan pk dari URL
+        tagihan = self.get_object()
         today = datetime.date.today()
         bulan, tahun = today.month, today.year
 
@@ -80,16 +75,13 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1. Kunci dan perbarui saldo rekening
-        # select_for_update() penting untuk mencegah race condition
         rekening_terkait = Rekening.objects.select_for_update().get(pk=tagihan.rekening.pk)
         rekening_terkait.saldo -= tagihan.jumlah_tagihan
         rekening_terkait.save()
         
-        # 2. Buat record Transaksi baru, dan pastikan menyertakan rekening
         transaksi_baru = Transaksi.objects.create(
             user=request.user,
-            rekening=tagihan.rekening, # <-- INI ADALAH PERBAIKAN UTAMA
+            rekening=tagihan.rekening,
             kategori=tagihan.kategori,
             deskripsi=tagihan.deskripsi,
             jumlah=tagihan.jumlah_tagihan,
@@ -97,7 +89,6 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
             tanggal=today
         )
 
-        # 3. Perbarui status tagihan
         status_tagihan.status_lunas = True
         status_tagihan.transaksi_pembayaran = transaksi_baru
         status_tagihan.save()

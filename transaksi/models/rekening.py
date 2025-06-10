@@ -9,7 +9,7 @@ class Rekening(models.Model):
     
     class Meta:
         verbose_name_plural = "Rekening"
-        unique_together = ('user', 'nama_bank', 'no_rekening') # Mencegah duplikat
+        unique_together = ('user', 'nama_bank', 'no_rekening')
 
     def __str__(self):
         return f"{self.nama_bank} - (Saldo: {self.saldo})"

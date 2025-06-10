@@ -9,7 +9,6 @@ class StatusTagihan(models.Model):
     tahun = models.PositiveIntegerField()
     status_lunas = models.BooleanField(default=False)
     
-    # Menghubungkan ke transaksi aktual yang melunasi pembayaran ini
     transaksi_pembayaran = models.OneToOneField(
         Transaksi, 
         on_delete=models.SET_NULL, 
@@ -19,7 +18,6 @@ class StatusTagihan(models.Model):
     )
 
     class Meta:
-        # Memastikan hanya ada satu entri status untuk setiap transaksi wajib per bulan per tahun
         unique_together = ('tagihan', 'bulan', 'tahun')
         verbose_name_plural = "Status Tagihan"
         app_label = "transaksi"
