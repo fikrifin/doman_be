@@ -32,7 +32,7 @@ class TransaksiViewSet(viewsets.ModelViewSet):
             except (ValueError, TypeError):
                 pass
         
-        return queryset.order_by('tanggal', '-dibuat_pada')
+        return queryset.order_by('-tanggal', '-dibuat_pada')
 
     def perform_create(self, serializer):
         rekening = serializer.validated_data['rekening']
