@@ -1,4 +1,6 @@
 import datetime
+from django.utils import timezone
+from datetime import timedelta
 from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -97,3 +99,37 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
             {'status': 'success', 'message': f"'{tagihan.deskripsi}' telah ditandai lunas."},
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=False, methods=['get'], url_path='notifikasi-jatuh-tempo')
+    def notifikasi_jatuh_tempo(self, request):
+        """
+        Mengembalikan daftar tagihan yang akan jatuh tempo dalam 7 hari
+        dan belum lunas untuk bulan ini.
+        URL: GET /api/status-tagihan/notifikasi-jatuh-tempo/
+        """
+        user = request.user
+        today = timezone.localdate()
+
+        seven_days_later = today + timedelta(days=7)
+        
+        tagihan_aktif = Tagihan.objects.filter(user=user, aktif=True)
+        
+        notifikasi_list = []
+        
+        for tagihan in tagihan_aktif:
+            try:
+                due_date_this_month = today.replace(day=tagihan.hari_jatuh_tempo)
+            except ValueError:
+                continue
+
+            if today <= due_date_this_month <= seven_days_later:
+                status_obj, created = StatusTagihan.objects.get_or_create(
+                    tagihan=tagihan,
+                    bulan=today.month,
+                    tahun=today.year
+                )
+                if not status_obj.status_lunas:
+                    notifikasi_list.append(tagihan)
+
+        serializer = self.get_serializer(notifikasi_list, many=True)
+        return Response(serializer.data)
