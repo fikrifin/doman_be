@@ -15,7 +15,7 @@ class TagihanViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Tagihan.objects.filter(user=self.request.user)
+        return Tagihan.objects.filter(user=self.request.user).order_by('hari_jatuh_tempo')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
