@@ -26,7 +26,7 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Queryset dasar adalah semua template Tagihan yang aktif milik user.
         """
-        return Tagihan.objects.filter(user=self.request.user, aktif=True)
+        return Tagihan.objects.filter(user=self.request.user, aktif=True).order_by('hari_jatuh_tempo')
 
     def list(self, request, *args, **kwargs):
         """
