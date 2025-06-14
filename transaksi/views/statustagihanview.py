@@ -23,9 +23,6 @@ class StatusTagihanViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagihanSerializer
 
     def get_queryset(self):
-        """
-        Queryset dasar adalah semua template Tagihan yang aktif milik user.
-        """
         return Tagihan.objects.filter(user=self.request.user, aktif=True).order_by('hari_jatuh_tempo')
 
     def list(self, request, *args, **kwargs):
