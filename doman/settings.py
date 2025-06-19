@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     'rest_framework',
-    'rest_framework.authtoken', # Untuk autentikasi berbasis token
+    'rest_framework.authtoken',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -136,7 +136,7 @@ PASSWORD_HASHERS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", # Alamat server development React
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
